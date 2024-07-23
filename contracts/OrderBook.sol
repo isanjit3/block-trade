@@ -8,27 +8,29 @@ contract OrderBook {
         uint quantity;
         uint price;
         address trader;
+        string user_id;
+        string order_id;
     }
 
     uint public orderCount = 0;
     mapping(uint => Order) public buyOrders;
     mapping(uint => Order) public sellOrders;
 
-    event BuyOrderPlaced(uint id, string symbol, uint quantity, uint price, address trader);
-    event SellOrderPlaced(uint id, string symbol, uint quantity, uint price, address trader);
-    event OrderMatched(uint buyOrderId, uint sellOrderId, string symbol, uint quantity, uint price, address buyer, address seller);
+    event BuyOrderPlaced(uint id, string symbol, uint quantity, uint price, address trader, string user_id, string order_id);
+    event SellOrderPlaced(uint id, string symbol, uint quantity, uint price, address trader, string user_id, string order_id);
+    event OrderMatched(uint buyOrderId, uint sellOrderId, string symbol, uint quantity, uint price, address buyer, string buyer_user_id, string buyer_order_id, address seller, string seller_user_id, string seller_order_id);
 
-    function placeBuyOrder(string memory symbol, uint quantity, uint price) public {
+    function placeBuyOrder(string memory symbol, uint quantity, uint price, string memory user_id, string memory order_id) public {
         orderCount++;
-        buyOrders[orderCount] = Order(orderCount, symbol, quantity, price, msg.sender);
-        emit BuyOrderPlaced(orderCount, symbol, quantity, price, msg.sender);
+        buyOrders[orderCount] = Order(orderCount, symbol, quantity, price, msg.sender, user_id, order_id);
+        emit BuyOrderPlaced(orderCount, symbol, quantity, price, msg.sender, user_id, order_id);
         matchOrders();
     }
 
-    function placeSellOrder(string memory symbol, uint quantity, uint price) public {
+    function placeSellOrder(string memory symbol, uint quantity, uint price, string memory user_id, string memory order_id) public {
         orderCount++;
-        sellOrders[orderCount] = Order(orderCount, symbol, quantity, price, msg.sender);
-        emit SellOrderPlaced(orderCount, symbol, quantity, price, msg.sender);
+        sellOrders[orderCount] = Order(orderCount, symbol, quantity, price, msg.sender, user_id, order_id);
+        emit SellOrderPlaced(orderCount, symbol, quantity, price, msg.sender, user_id, order_id);
         matchOrders();
     }
 
@@ -45,7 +47,11 @@ contract OrderBook {
                             buyOrders[i].quantity -= matchQuantity;
                             sellOrders[j].quantity -= matchQuantity;
 
-                            emit OrderMatched(buyOrders[i].id, sellOrders[j].id, buyOrders[i].symbol, matchQuantity, buyOrders[i].price, buyOrders[i].trader, sellOrders[j].trader);
+                            emit OrderMatched(
+                                buyOrders[i].id, sellOrders[j].id, buyOrders[i].symbol, matchQuantity, buyOrders[i].price,
+                                buyOrders[i].trader, buyOrders[i].user_id, buyOrders[i].order_id,
+                                sellOrders[j].trader, sellOrders[j].user_id, sellOrders[j].order_id
+                            );
 
                             if (buyOrders[i].quantity == 0) {
                                 break;
